@@ -8,7 +8,7 @@ import Modal from "react-modal";
 import { useQuery } from "react-query";
 import { toast } from "react-toastify";
 import { handleGetPnrStatus, handlePnrUpload } from "../../Api/api";
-import { TaxInfo } from "../../Models/api";
+import { NewTaxInfo, TaxInfo } from "../../Models/api";
 import Money from "../../assets/svg/iconmonstr-banknote-thin.svg";
 import Cross from "../../assets/svg/iconmonstr-x-mark-circle-filled.svg";
 import Loader from "../Layout/Loader";
@@ -41,7 +41,7 @@ export default function PnrUpload() {
 			});
 	};
 
-	const { data, isLoading, isError } = useQuery<TaxInfo>(
+	const { data, isLoading, isError } = useQuery<NewTaxInfo>(
 		[`prn status ${date}`],
 		async () => await handleGetPnrStatus(date),
 		{
@@ -49,7 +49,6 @@ export default function PnrUpload() {
 			staleTime: 86400 / 24,
 		}
 	);
-	console.log(data);
 
 	if (isLoading) {
 		return (

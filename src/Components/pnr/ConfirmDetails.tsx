@@ -1,13 +1,13 @@
 import moment from "moment";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import { handlePnrUpload } from "../../Api/api";
-import { TaxInfo } from "../../Models/api";
+import { NewTaxInfo, TaxInfo } from "../../Models/api";
 import Money from "../../assets/svg/iconmonstr-banknote-thin.svg";
 import Revenue from "./Revenue";
 
 interface Iprops {
-	data: TaxInfo;
+	data: NewTaxInfo;
 	close: () => void;
 }
 export default function ConfirmDetails({ data, close }: Iprops) {
@@ -15,10 +15,16 @@ export default function ConfirmDetails({ data, close }: Iprops) {
 	const [confirm, setConfirm] = useState<boolean>(false);
 	const [payExcise, setPayExcise] = useState<boolean>(true);
 	const [payWHT, setPayWHT] = useState<boolean>(true);
-	const [amount, setAmount] = useState<number>(
-		parseFloat(data.deposit.total_amount * 0.05) + parseFloat(data.withdrawal.total_amount * 0.05)
-	);
-	console.log(amount);
+	const [exciseAmount, setExciseAmount] = useState<number>(data.deposit.total_amount * 0.05);
+	const [isEditingExcise, setIsEditingExcise] = useState<boolean>(false);
+	const [withholdingAmount, setWithholdingAmount] = useState<number>(data.withdrawal.total_amount * 0.05);
+	const [isEditingWithholding, setIsEditingWithholding] = useState<boolean>(false);
+	const [amount, setAmount] = useState<number>(exciseAmount + withholdingAmount);
+
+	useEffect(() => {
+		setAmount(exciseAmount + withholdingAmount);
+	}, [exciseAmount, withholdingAmount]);
+
 
 	const notify = (msg: string) => toast(msg);
 
@@ -29,6 +35,7 @@ export default function ConfirmDetails({ data, close }: Iprops) {
 				forDate: data.periodTo,
 				payExcise: payExcise,
 				payWHT: payWHT,
+				amount: amount,
 			});
 
 			if (res.data.success) {
@@ -80,12 +87,17 @@ export default function ConfirmDetails({ data, close }: Iprops) {
 						className="h-6 mt-1 w-6 py-2 px-2 rounded"
 					/>
 					<Revenue
-						amount={data.deposit.total_amount * 0.05}
+						amount={exciseAmount}
 						label="Total Exercise"
 						date={
 							data.periodFrom ??
 							moment().subtract(1, "days").format("DD-MM-YYYY")
 						}
+						editable={true}
+						isEditing={isEditingExcise}
+						onEdit={() => setIsEditingExcise(true)}
+						onChange={setExciseAmount}
+						onSave={() => setIsEditingExcise(false)}
 					/>
 				</div>
 				<div className="flex items-start gap-3">
@@ -105,12 +117,17 @@ export default function ConfirmDetails({ data, close }: Iprops) {
 						className="h-6 w-6 py-2 mt-1 px-2 rounded"
 					/>
 					<Revenue
-						amount={data.withdrawal.total_amount * 0.05}
+						amount={withholdingAmount}
 						label="Total Withholding"
 						date={
 							data.periodFrom ??
 							moment().subtract(1, "days").format("DD-MM-YYYY")
 						}
+						editable={true}
+						isEditing={isEditingWithholding}
+						onEdit={() => setIsEditingWithholding(true)}
+						onChange={setWithholdingAmount}
+						onSave={() => setIsEditingWithholding(false)}
 					/>
 				</div>
 			</div>
